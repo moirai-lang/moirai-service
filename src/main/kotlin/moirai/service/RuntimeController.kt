@@ -9,4 +9,10 @@ class RuntimeController {
     fun execute(@RequestBody body: String): String {
         return ""
     }
+
+    @PostMapping("/store")
+    @CrossOrigin
+    fun store(@RequestBody body: String): String {
+        return ""
+    }
 }
