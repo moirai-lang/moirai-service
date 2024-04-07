@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "org.moirai-lang"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.1"
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_21
@@ -16,11 +16,13 @@ java {
 
 repositories {
 	mavenCentral()
+	mavenLocal()
 }
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation("org.moirai-lang:moirai:0.2.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
