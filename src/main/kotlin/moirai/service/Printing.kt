@@ -53,30 +53,31 @@ fun localize(errors: List<LanguageError>): String {
     return sb.toString()
 }
 
+// TODO: Actually localize these error messages, possibly
 fun localize(error: ErrorKind): String =
     when(error) {
-        CalculateCostFailed -> TODO()
-        is CannotExplicitlyInstantiate -> TODO()
-        is CannotFindBestType -> TODO()
-        CannotInstantiate -> TODO()
-        is CannotRefFunctionParam -> TODO()
-        is CannotUsePlatformSumTypeMember -> TODO()
-        is CannotUseRawType -> TODO()
-        CostOverLimit -> TODO()
-        DecimalInfiniteDivide -> TODO()
-        is DictionaryArgsMustBePairs -> TODO()
-        is DuplicateCaseDetected -> TODO()
-        is DuplicateImport -> TODO()
-        is DuplicateTypeParameter -> TODO()
-        ExpectOtherError -> TODO()
-        ExpectedNamedScript -> TODO()
-        is ExpectedTransientScript -> TODO()
-        is FinMismatch -> TODO()
-        is ForEachFeatureBan -> TODO()
-        is FormalParamFeatureBan -> TODO()
-        is FunctionAssign -> TODO()
-        is FunctionReturnType -> TODO()
-        is IdentifierAlreadyExists -> TODO()
+        CalculateCostFailed -> "Cost calculation phase failed"
+        is CannotExplicitlyInstantiate -> "Explicit type arguments are not supported for ${error.symbol.value}"
+        is CannotFindBestType -> "Cannot find best type"
+        CannotInstantiate -> "Cannot instantiate"
+        is CannotRefFunctionParam -> "Formal parameters with a function type cannot be referenced"
+        is CannotUsePlatformSumTypeMember -> "Usage of sum type member types is not allowed, use the sum type instead"
+        is CannotUseRawType -> "Cannot use raw type without type parameters"
+        CostOverLimit -> "The cost of executing the script exceeds the upper bound allowed by this architecture"
+        DecimalInfiniteDivide -> "Divide by zero"
+        is DictionaryArgsMustBePairs -> "The arguments to the Dictionary constructor must have type Pair"
+        is DuplicateCaseDetected -> "Duplicate case ${error.name}"
+        is DuplicateImport -> "Duplicate import ${error.import.joinToString { "." }}"
+        is DuplicateTypeParameter -> "Duplicate type parameter ${error.identifier.value}"
+        ExpectOtherError -> "Invalid state, expect other error"
+        ExpectedNamedScript -> "A named script was expected, but a transient script was observed"
+        is ExpectedTransientScript -> "A transient script was expected, but the named script ${error.name} was observed"
+        is FinMismatch -> "Pessimistic upper bound mismatch, expected ${error.expected}, actual ${error.actual}"
+        is ForEachFeatureBan -> "Source type ${error.type.value} is not supported when using the for loop"
+        is FormalParamFeatureBan -> "This type cannot appear as a formal parameter to a function"
+        is FunctionAssign -> "Functions cannot appear in the assign statement"
+        is FunctionReturnType -> "Function types cannot be used as the return type of a function"
+        is IdentifierAlreadyExists -> "Identifier ${error.identifier.value} already exists"
         is IdentifierCouldNotBeDefined -> TODO()
         is IdentifierNotFound -> TODO()
         is ImmutableAssign -> TODO()
