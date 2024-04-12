@@ -7,8 +7,8 @@ plugins {
 	kotlin("plugin.spring") version "1.9.23"
 }
 
-group = "org.moirai"
-version = "0.0.1-SNAPSHOT"
+group = "org.moirai-lang"
+version = "0.0.1"
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_21
@@ -23,7 +23,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	implementation("org.moirai-lang:moirai:0.2.2")
+	implementation("org.moirai-lang:moirai:0.2.3")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
