@@ -7,7 +7,7 @@ import moirai.semantics.core.NoSuchFile
 import moirai.semantics.core.NotInSource
 
 class RuntimeSourceStore : SourceStore {
-    // TODO: Store scripts in a blob storage database
+    // TODO: Store named scripts in a blob storage database
     private val fetchDict: MutableMap<List<String>, String> = mutableMapOf()
 
     override fun fetchSourceText(namespace: List<String>): String {
