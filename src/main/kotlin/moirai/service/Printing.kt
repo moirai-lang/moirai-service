@@ -116,20 +116,20 @@ fun localize(error: ErrorKind): String =
         RuntimeImmutableViolation -> "An immutable value was modified at runtime"
         is SecondDegreeHigherOrderFunction -> "Second-degree higher-order functions are never allowed"
         SelfImport -> "Scripts cannot import themselves"
-        is SumTypeRequired -> TODO()
-        is SymbolCouldNotBeApplied -> TODO()
-        is SymbolHasNoFields -> TODO()
-        is SymbolHasNoMembers -> TODO()
-        is SymbolHasNoParameters -> TODO()
-        is SymbolIsNotAField -> TODO()
-        is SyntaxError -> TODO()
-        is TooManyElements -> TODO()
-        is TypeArgFeatureBan -> TODO()
-        is TypeInferenceFailed -> TODO()
-        is TypeMismatch -> TODO()
-        is TypeMustBeCostExpression -> TODO()
-        is TypeRequiresExplicit -> TODO()
-        is TypeRequiresExplicitFin -> TODO()
-        TypeSystemBug -> TODO()
-        is UnknownCaseDetected -> TODO()
+        is SumTypeRequired -> "A sum type is required in this context, actual: ${error.type.value}"
+        is SymbolCouldNotBeApplied -> "Symbol ${error.signifier.value} is not a function or type constructor"
+        is SymbolHasNoFields -> "Symbol ${error.type.value} has no fields"
+        is SymbolHasNoMembers -> "Symbol ${error.type.value} has no members"
+        is SymbolHasNoParameters -> "Symbol ${error.identifier.value} has no type parameters"
+        is SymbolIsNotAField -> "Symbol ${error.signifier.value} is not a field"
+        is SyntaxError -> "Syntax error"
+        is TooManyElements -> "Too many elements, Fin: ${error.fin}, elements: ${error.elements}"
+        is TypeArgFeatureBan -> "Symbol ${error.type.value} cannot be used as a type argument"
+        is TypeInferenceFailed -> "Type inference failed for type parameter ${error.typeParam.value}"
+        is TypeMismatch -> "Type mismatch, expected: ${error.expected.value}, actual: ${error.actual.value}"
+        is TypeMustBeCostExpression -> "Type must be a cost expression, actual: ${error.type.value}"
+        is TypeRequiresExplicit -> "Symbol ${error.identifier.value} requires explicit type arguments"
+        is TypeRequiresExplicitFin -> "Symbol ${error.identifier.value} requires explicit Fin"
+        TypeSystemBug -> "Type system or interpreter bug"
+        is UnknownCaseDetected -> "Unknown case ${error.name}"
     }
