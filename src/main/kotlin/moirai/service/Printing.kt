@@ -89,33 +89,33 @@ fun localize(error: ErrorKind): String =
         InvalidAssign -> "Invalid assign"
         is InvalidCostExpressionFunctionName -> "Only Sum, Min, and Max functions are supported in cost expressions, actual: ${error.name}"
         InvalidCostUpperLimit -> "Invalid cost upper limit"
-        is InvalidDefinitionLocation -> TODO()
-        is InvalidFinLiteral -> TODO()
-        is InvalidFinTypeSub -> TODO()
-        is InvalidIntegerLiteral -> TODO()
-        is InvalidPluginLocation -> TODO()
-        InvalidRangeArg -> TODO()
-        is InvalidRef -> TODO()
-        is InvalidSource -> TODO()
-        is InvalidStandardTypeSub -> TODO()
-        is MaskingTypeParameter -> TODO()
-        is MissingMatchCase -> TODO()
-        NegativeFin -> TODO()
-        is NoSuchFile -> TODO()
-        is ParameterizedGroundMismatch -> TODO()
-        is PluginAlreadyExists -> TODO()
-        RandomRequiresIntLong -> TODO()
-        is RecordFieldFeatureBan -> TODO()
-        is RecordFieldFunctionType -> TODO()
-        is RecursiveFunctionDetected -> TODO()
-        RecursiveNamespaceDetected -> TODO()
-        is RecursiveRecordDetected -> TODO()
-        is ReturnTypeFeatureBan -> TODO()
-        RuntimeCostExpressionEvalFailed -> TODO()
-        is RuntimeFinViolation -> TODO()
-        RuntimeImmutableViolation -> TODO()
-        is SecondDegreeHigherOrderFunction -> TODO()
-        SelfImport -> TODO()
+        is InvalidDefinitionLocation -> "Symbol ${error.identifier.value} cannot be defined here"
+        is InvalidFinLiteral -> "Invalid Fin literal"
+        is InvalidFinTypeSub -> "Only cost expressions and Fin type parameters can be used here, actual: ${error.type.value}"
+        is InvalidIntegerLiteral -> "Invalid Int literal"
+        is InvalidPluginLocation -> "Plugins cannot be defined in named or transient scripts"
+        InvalidRangeArg -> "Arguments to the range plugin must be Int literals"
+        is InvalidRef -> "Symbol ${error.symbol.value} cannot be referenced"
+        is InvalidSource -> "Invalid for loop source type ${error.type.value}"
+        is InvalidStandardTypeSub -> "Cost expressions and Fin type parameters cannot be used here, actual: ${error.type.value}"
+        is MaskingTypeParameter -> "Symbol ${error.identifier.value} masks a type parameter"
+        is MissingMatchCase -> "Missing match case ${error.name}"
+        NegativeFin -> "Cost expressions and Fin type parameters must never evaluate to negative values"
+        is NoSuchFile -> "No such file ${error.import.joinToString { "." }}"
+        is ParameterizedGroundMismatch -> "Type parameters cannot be defined here"
+        is PluginAlreadyExists -> "Plugin ${error.name} already exists"
+        RandomRequiresIntLong -> "The random plugin requires Int arguments"
+        is RecordFieldFeatureBan -> "Record fields cannot contain type ${error.type.value}"
+        is RecordFieldFunctionType -> "Record fields cannot contain function types, record: ${error.record.value}, field: ${error.field.value}"
+        is RecursiveFunctionDetected -> "Recursive functions are never allowed, function: ${error.symbol.value}"
+        RecursiveNamespaceDetected -> "Recursive namespace detected"
+        is RecursiveRecordDetected -> "Recursive records are never allowed, record: ${error.type.value}"
+        is ReturnTypeFeatureBan -> "The return type ${error.type.value} is not allowed here"
+        RuntimeCostExpressionEvalFailed -> "Failed to evaluate a cost expression at runtime"
+        is RuntimeFinViolation -> "A Fin type parameter promise has been violated at runtime"
+        RuntimeImmutableViolation -> "An immutable value was modified at runtime"
+        is SecondDegreeHigherOrderFunction -> "Second-degree higher-order functions are never allowed"
+        SelfImport -> "Scripts cannot import themselves"
         is SumTypeRequired -> TODO()
         is SymbolCouldNotBeApplied -> TODO()
         is SymbolHasNoFields -> TODO()
