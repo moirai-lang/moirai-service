@@ -1,0 +1,2 @@
+# Moirai Programming Language Example Webservice
+The purpose of this project is to provide a minimal demonstration webservice that uses the Moirai Programming Language public interpreter API. There are several TODO comments throughout the code that demonstrate places where the service should be customized and extended.
