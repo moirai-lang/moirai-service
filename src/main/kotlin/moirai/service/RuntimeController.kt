@@ -1,9 +1,6 @@
 package moirai.service
 
-import moirai.composition.CompilerFrontend
-import moirai.composition.NamedScript
-import moirai.composition.PureTransient
-import moirai.composition.TransientScript
+import moirai.composition.*
 import moirai.eval.eval
 import moirai.semantics.core.ExpectedNamedScript
 import moirai.semantics.core.ExpectedTransientScript
@@ -12,20 +9,24 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 class RuntimeController {
-    val executionCache = RuntimeExecutionCache()
-    val sourceStore = RuntimeSourceStore()
+    private val sourceStore = RuntimeSourceStore()
+    private val executionCache = RuntimeExecutionCache()
+    private val frontend = CompilerFrontend(
+        RuntimeArchitecture,
+        sourceStore,
+        UserPluginSource(RuntimePlugins.pluginSource)
+    )
 
     @PostMapping("/execute")
     @CrossOrigin
     fun execute(@RequestBody source: String): String {
         try {
-            val frontend = CompilerFrontend(RuntimeArchitecture, sourceStore)
             val executionArtifacts = frontend.compileUsingCache(source, executionCache)
 
             when (val scriptType = executionArtifacts.importScan.scriptType) {
                 is PureTransient,
                 is TransientScript -> {
-                    return printConstruct(eval(RuntimeArchitecture, executionArtifacts))
+                    return printConstruct(eval(RuntimeArchitecture, executionArtifacts, RuntimePlugins.userPlugins))
                 }
 
                 is NamedScript -> {
@@ -41,8 +42,6 @@ class RuntimeController {
     @CrossOrigin
     fun store(@RequestBody source: String): String {
         try {
-            val frontend = CompilerFrontend(RuntimeArchitecture, sourceStore)
-
             // TODO: Full compile with topological sort is a very expensive operation, be sure to throttle users
             val executionArtifacts = frontend.fullCompileWithTopologicalSort(source)
 
