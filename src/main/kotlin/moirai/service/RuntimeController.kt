@@ -1,11 +1,14 @@
 package moirai.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import moirai.composition.*
 import moirai.eval.eval
 import moirai.semantics.core.ExpectedNamedScript
 import moirai.semantics.core.ExpectedTransientScript
 import moirai.semantics.core.LanguageException
+import moirai.transport.*
 import org.springframework.web.bind.annotation.*
+
 
 @RestController
 class RuntimeController {
@@ -58,6 +61,55 @@ class RuntimeController {
             }
         } catch (ex: LanguageException) {
             throw Exception(localize(ex.errors.toList()))
+        }
+    }
+
+    @PostMapping("/jsonExecuteSingle")
+    @CrossOrigin
+    fun executeJSON(
+        @RequestParam(
+            value = "scriptName"
+        ) scriptName: String,
+        @RequestParam(
+            value = "functionName"
+        ) functionName: String,
+        @RequestBody body: String
+    ): String {
+        if(body.contains("$")) {
+            throw Exception("String interpolation escape characters are not allowed in the body")
+        }
+
+        val scriptNameParts = scriptName.split(".")
+        when (val fetchArtifactsResult = executionCache.fetchExecutionArtifacts(scriptNameParts)) {
+            is InCache -> {
+                when (val fetchFunctionResult =
+                    fetchTransportFunction(fetchArtifactsResult.executionArtifacts, functionName)) {
+                    is TransportFunction -> {
+                        if (fetchFunctionResult.formalParams.size != 1) {
+                            throw Exception("Function $functionName must have exactly one formal parameter")
+                        }
+
+                        val argumentType = fetchFunctionResult.formalParams.first().type
+                        if (argumentType !is TransportGroundRecordType) {
+                            throw Exception("The single argument to $functionName must be a ground record type")
+                        }
+
+                        val mapper = ObjectMapper()
+                        val tree = mapper.readTree(body)
+
+                        if (tree.isObject || tree.isPojo) {
+                            val moiraiSource = "$functionName(${jsonToMoirai(tree, argumentType)})"
+                            return execute(moiraiSource)
+                        } else {
+                            throw Exception("JSON body must be a JSON object")
+                        }
+                    }
+
+                    TransportFunctionNotFound -> throw Exception("Identifier $functionName not found")
+                }
+            }
+
+            NotInCache -> throw Exception("Script named $scriptName as not found in the execution cache")
         }
     }
 }
