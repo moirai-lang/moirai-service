@@ -82,6 +82,8 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
 
                     jsonFail()
                 }
+
+                return "Dictionary(${elements.joinToString { ", " }})"
             }
 
             jsonFail()
