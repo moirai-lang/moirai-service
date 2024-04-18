@@ -33,11 +33,11 @@ class RuntimeController {
                 }
 
                 is NamedScript -> {
-                    throw Exception(localize(ExpectedTransientScript(scriptType.nameParts.joinToString { "." })))
+                    throw MoiraiServiceException(localize(ExpectedTransientScript(scriptType.nameParts.joinToString("."))))
                 }
             }
         } catch (ex: LanguageException) {
-            throw Exception(localize(ex.errors.toList()))
+            throw MoiraiServiceException(localize(ex.errors.toList()))
         }
     }
 
@@ -52,15 +52,15 @@ class RuntimeController {
                 is NamedScript -> {
                     executionCache.storeExecutionArtifacts(scriptType.nameParts, executionArtifacts)
                     sourceStore.addArtifacts(scriptType.nameParts, source)
-                    return scriptType.nameParts.joinToString { "." }
+                    return scriptType.nameParts.joinToString(".")
                 }
 
                 else -> {
-                    throw Exception(localize(ExpectedNamedScript))
+                    throw MoiraiServiceException(localize(ExpectedNamedScript))
                 }
             }
         } catch (ex: LanguageException) {
-            throw Exception(localize(ex.errors.toList()))
+            throw MoiraiServiceException(localize(ex.errors.toList()))
         }
     }
 
@@ -76,7 +76,7 @@ class RuntimeController {
         @RequestBody body: String
     ): String {
         if(body.contains("$")) {
-            throw Exception("String interpolation escape characters are not allowed in the body")
+            throw MoiraiServiceException("String interpolation escape characters are not allowed in the body")
         }
 
         val scriptNameParts = scriptName.split(".")
@@ -86,30 +86,34 @@ class RuntimeController {
                     fetchTransportFunction(fetchArtifactsResult.executionArtifacts, functionName)) {
                     is TransportFunction -> {
                         if (fetchFunctionResult.formalParams.size != 1) {
-                            throw Exception("Function $functionName must have exactly one formal parameter")
+                            throw MoiraiServiceException("Function $functionName must have exactly one formal parameter")
                         }
 
                         val argumentType = fetchFunctionResult.formalParams.first().type
                         if (argumentType !is TransportGroundRecordType) {
-                            throw Exception("The single argument to $functionName must be a ground record type")
+                            throw MoiraiServiceException("The single argument to $functionName must be a ground record type")
                         }
 
                         val mapper = ObjectMapper()
                         val tree = mapper.readTree(body)
 
                         if (tree.isObject || tree.isPojo) {
-                            val moiraiSource = "$functionName(${jsonToMoirai(tree, argumentType)})"
+                            val moiraiSource = """
+                                transient script $scriptName
+                                
+                                $functionName(${jsonToMoirai(tree, argumentType)})
+                            """.trimIndent()
                             return execute(moiraiSource)
                         } else {
-                            throw Exception("JSON body must be a JSON object")
+                            throw MoiraiServiceException("JSON body must be a JSON object")
                         }
                     }
 
-                    TransportFunctionNotFound -> throw Exception("Identifier $functionName not found")
+                    TransportFunctionNotFound -> throw MoiraiServiceException("Identifier $functionName not found")
                 }
             }
 
-            NotInCache -> throw Exception("Script named $scriptName as not found in the execution cache")
+            NotInCache -> throw MoiraiServiceException("Script named $scriptName as not found in the execution cache")
         }
     }
 }

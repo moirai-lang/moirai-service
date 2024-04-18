@@ -26,7 +26,7 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
 
         is TransportGroundRecordType -> {
             if (node.isObject || node.isPojo) {
-                val fields = type.fields.map { jsonToMoirai(node[it.name], it.type) }.joinToString { ", " }
+                val fields = type.fields.map { jsonToMoirai(node[it.name], it.type) }.joinToString()
                 return "${type.name}($fields)"
             }
 
@@ -53,12 +53,12 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
 
             if (type.name == "List" && node.isArray) {
                 val elements = node.elements().asSequence().toList().map { jsonToMoirai(it, type.typeArgs.first()) }
-                return "List(${elements.joinToString { ", " }})"
+                return "List(${elements.joinToString()})"
             }
 
             if (type.name == "Set" && node.isArray) {
                 val elements = node.elements().asSequence().toList().map { jsonToMoirai(it, type.typeArgs.first()) }
-                return "Set(${elements.joinToString { ", " }})"
+                return "Set(${elements.joinToString()})"
             }
 
             if (type.name == "Dictionary" && node.isArray) {
@@ -83,7 +83,7 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
                     jsonFail()
                 }
 
-                return "Dictionary(${elements.joinToString { ", " }})"
+                return "Dictionary(${elements.joinToString()})"
             }
 
             jsonFail()
@@ -91,7 +91,7 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
 
         is TransportParameterizedRecordType -> {
             if (node.isObject || node.isPojo) {
-                val fields = type.fields.map { jsonToMoirai(node[it.name], it.type) }.joinToString { ", " }
+                val fields = type.fields.map { jsonToMoirai(node[it.name], it.type) }.joinToString()
                 return "${type.name}($fields)"
             }
 
@@ -133,5 +133,5 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
 }
 
 fun jsonFail(): Nothing {
-    throw Exception("Could not convert JSON to this type")
+    throw MoiraiServiceException("Could not convert JSON to this type")
 }

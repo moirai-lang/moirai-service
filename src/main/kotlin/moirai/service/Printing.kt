@@ -13,7 +13,7 @@ fun printConstruct(value: Value): String =
         is IntValue -> value.canonicalForm.toString()
 
         // Collections
-        is ListValue -> "List(${value.elements.map { printConstruct(it) }.joinToString { ", " }})"
+        is ListValue -> "List(${value.elements.map { printConstruct(it) }.joinToString()})"
         is DictionaryValue -> "Dictionary(${
             value.dictionary.entries.map {
                 "${printConstruct(it.key)} to ${
@@ -21,10 +21,10 @@ fun printConstruct(value: Value): String =
                         it.value
                     )
                 }"
-            }.joinToString { ", " }
+            }.joinToString()
         })"
 
-        is SetValue -> "Set(${value.elements.map { printConstruct(it) }.joinToString { ", " }})"
+        is SetValue -> "Set(${value.elements.map { printConstruct(it) }.joinToString()})"
 
         // Objects
         is ObjectValue -> value.id
@@ -32,11 +32,11 @@ fun printConstruct(value: Value): String =
         UnitValue -> "Unit"
 
         // Records
-        is RecordValue -> "${value.id}(${value.inOrderValues.map { printConstruct(it) }.joinToString { ", " }})"
-        is SumRecordValue -> "${value.id}(${value.inOrderValues.map { printConstruct(it) }.joinToString { ", " }})"
+        is RecordValue -> "${value.id}(${value.inOrderValues.map { printConstruct(it) }.joinToString()})"
+        is SumRecordValue -> "${value.id}(${value.inOrderValues.map { printConstruct(it) }.joinToString()})"
 
         // Errors
-        else -> throw Exception("Unexpected Value")
+        else -> throw MoiraiServiceException("Unexpected Value")
     }
 
 fun localize(errors: List<LanguageError>): String {
@@ -58,7 +58,7 @@ fun localize(error: ErrorKind): String =
     when(error) {
         CalculateCostFailed -> "Cost calculation phase failed"
         is CannotExplicitlyInstantiate -> "Explicit type arguments are not supported for ${error.symbol.value}"
-        is CannotFindBestType -> "Cannot find best type: ${error.types.map { it.value }.joinToString { ", " }}"
+        is CannotFindBestType -> "Cannot find best type: ${error.types.map { it.value }.joinToString()}"
         CannotInstantiate -> "Cannot instantiate"
         is CannotRefFunctionParam -> "Formal parameter ${error.identifier.value} has a function type and cannot be referenced"
         is CannotUsePlatformSumTypeMember -> "Usage of sum type member ${error.type.value} is not allowed, use the sum type instead"
@@ -67,7 +67,7 @@ fun localize(error: ErrorKind): String =
         DecimalInfiniteDivide -> "Divide by zero"
         is DictionaryArgsMustBePairs -> "The arguments to the Dictionary constructor must have type Pair, actual: ${error.actual.value}"
         is DuplicateCaseDetected -> "Duplicate case ${error.name}"
-        is DuplicateImport -> "Duplicate import ${error.import.joinToString { "." }}"
+        is DuplicateImport -> "Duplicate import ${error.import.joinToString(".")}"
         is DuplicateTypeParameter -> "Duplicate type parameter ${error.identifier.value}"
         ExpectOtherError -> "Invalid state, expect other error"
         ExpectedNamedScript -> "A named script was expected, but a transient script was observed"
@@ -101,7 +101,7 @@ fun localize(error: ErrorKind): String =
         is MaskingTypeParameter -> "Symbol ${error.identifier.value} masks a type parameter"
         is MissingMatchCase -> "Missing match case ${error.name}"
         NegativeFin -> "Cost expressions and Fin type parameters must never evaluate to negative values"
-        is NoSuchFile -> "No such file ${error.import.joinToString { "." }}"
+        is NoSuchFile -> "No such file ${error.import.joinToString(".")}"
         is ParameterizedGroundMismatch -> "Type parameters cannot be defined here"
         is PluginAlreadyExists -> "Plugin ${error.name} already exists"
         RandomRequiresIntLong -> "The random plugin requires Int arguments"
