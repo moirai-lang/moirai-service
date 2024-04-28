@@ -75,10 +75,6 @@ class RuntimeController {
         ) functionName: String,
         @RequestBody body: String
     ): String {
-        if(body.contains("$")) {
-            throw MoiraiServiceException("String interpolation escape characters are not allowed in the body")
-        }
-
         val scriptNameParts = scriptName.split(".")
         when (val fetchArtifactsResult = executionCache.fetchExecutionArtifacts(scriptNameParts)) {
             is InCache -> {
@@ -98,12 +94,19 @@ class RuntimeController {
                         val tree = mapper.readTree(body)
 
                         if (tree.isObject || tree.isPojo) {
-                            val moiraiSource = """
-                                transient script $scriptName
-                                
-                                $functionName(${jsonToMoirai(tree, argumentType)})
-                            """.trimIndent()
-                            return execute(moiraiSource)
+                            val recordAst = jsonToMoirai(tree, argumentType)
+                            val invokeAst = ApplyTransportAst(fetchFunctionResult.name, listOf(recordAst))
+                            return printConstruct(
+                                eval(
+                                    scriptName,
+                                    invokeAst,
+                                    RuntimeArchitecture,
+                                    sourceStore,
+                                    executionCache,
+                                    RuntimePlugins.pluginSource,
+                                    RuntimePlugins.userPlugins
+                                )
+                            )
                         } else {
                             throw MoiraiServiceException("JSON body must be a JSON object")
                         }

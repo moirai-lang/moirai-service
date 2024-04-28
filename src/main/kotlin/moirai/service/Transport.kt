@@ -2,22 +2,23 @@ package moirai.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import moirai.transport.*
+import java.math.BigDecimal
 
-fun jsonToMoirai(node: JsonNode, type: TransportType): String {
+fun jsonToMoirai(node: JsonNode, type: TransportType): TransportAst {
     when (type) {
         is TransportBasicType -> {
             if (type.name == "Boolean" && node.isValueNode) {
-                return node.asBoolean().toString()
+                return BooleanLiteralTransportAst(node.asBoolean())
             }
 
             if (type.name == "Int" && node.isValueNode) {
-                return node.asInt().toString()
+                return IntLiteralTransportAst(node.asInt())
             }
 
             if (type.name == "Char" && node.isTextual) {
                 val t = node.toString().trimStart('"').trimEnd('"')
                 if (t.length == 1) {
-                    return "\'${t}\'"
+                    return CharLiteralTransportAst(t.toCharArray().first())
                 }
             }
 
@@ -26,8 +27,8 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
 
         is TransportGroundRecordType -> {
             if (node.isObject || node.isPojo) {
-                val fields = type.fields.map { jsonToMoirai(node[it.name], it.type) }.joinToString()
-                return "${type.name}($fields)"
+                val fields = type.fields.map { jsonToMoirai(node[it.name], it.type) }
+                return ApplyTransportAst(type.name, fields)
             }
 
             jsonFail()
@@ -35,7 +36,7 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
 
         is TransportObjectType -> {
             if (node.isTextual && node.asText() == type.name) {
-                return type.name
+                return RefTransportAst(type.name)
             }
 
             jsonFail()
@@ -43,22 +44,21 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
 
         is TransportParameterizedBasicType -> {
             if (type.name == "String" && node.isValueNode) {
-                val t = node.toString().trimStart('"').trimEnd('"')
-                return "\"${t}\""
+                return StringLiteralTransportAst(node.toString())
             }
 
             if (type.name == "Decimal" && node.isValueNode) {
-                return node.asDouble().toString()
+                return DecimalLiteralTransportAst(BigDecimal(node.toString()))
             }
 
             if (type.name == "List" && node.isArray) {
                 val elements = node.elements().asSequence().toList().map { jsonToMoirai(it, type.typeArgs.first()) }
-                return "List(${elements.joinToString()})"
+                return ApplyTransportAst(type.name, elements)
             }
 
             if (type.name == "Set" && node.isArray) {
                 val elements = node.elements().asSequence().toList().map { jsonToMoirai(it, type.typeArgs.first()) }
-                return "Set(${elements.joinToString()})"
+                return ApplyTransportAst(type.name, elements)
             }
 
             if (type.name == "Dictionary" && node.isArray) {
@@ -77,13 +77,16 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
                         // Second is value
                         val v = it[s[1]]
 
-                        "${jsonToMoirai(k, type.typeArgs[0])} to ${jsonToMoirai(v, type.typeArgs[1])}"
+                        ApplyTransportAst(
+                            "Pair",
+                            listOf(jsonToMoirai(k, type.typeArgs[0]), jsonToMoirai(v, type.typeArgs[1]))
+                        )
                     }
 
                     jsonFail()
                 }
 
-                return "Dictionary(${elements.joinToString()})"
+                return ApplyTransportAst(type.name, elements)
             }
 
             jsonFail()
@@ -91,8 +94,8 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
 
         is TransportParameterizedRecordType -> {
             if (node.isObject || node.isPojo) {
-                val fields = type.fields.map { jsonToMoirai(node[it.name], it.type) }.joinToString()
-                return "${type.name}($fields)"
+                val fields = type.fields.map { jsonToMoirai(node[it.name], it.type) }
+                return ApplyTransportAst(type.name, fields)
             }
 
             jsonFail()
@@ -100,7 +103,7 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
 
         is TransportPlatformObjectType -> {
             if (node.isTextual && node.asText() == type.name) {
-                return type.name
+                return RefTransportAst(type.name)
             }
 
             jsonFail()
@@ -109,9 +112,9 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): String {
         is TransportPlatformSumType -> {
             if (type.name == "Option") {
                 if (node.isNull) {
-                    return "None"
+                    return RefTransportAst("None")
                 } else {
-                    return "Some(${jsonToMoirai(node, type.typeArgs.first())})"
+                    return ApplyTransportAst("Some", listOf(jsonToMoirai(node, type.typeArgs.first())))
                 }
             }
 
