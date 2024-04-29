@@ -100,10 +100,8 @@ class RuntimeController {
                                 eval(
                                     scriptName,
                                     invokeAst,
-                                    RuntimeArchitecture,
-                                    sourceStore,
+                                    frontend,
                                     executionCache,
-                                    RuntimePlugins.pluginSource,
                                     RuntimePlugins.userPlugins
                                 )
                             )
