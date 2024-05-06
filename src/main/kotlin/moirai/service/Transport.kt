@@ -22,16 +22,22 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): TransportAst {
                 }
             }
 
-            jsonFail()
+            jsonFail(type)
         }
 
         is TransportGroundRecordType -> {
             if (node.isObject || node.isPojo) {
-                val fields = type.fields.map { jsonToMoirai(node[it.name], it.type) }
+                val fields = type.fields.map {
+                    if(node.has(it.name)) {
+                        jsonToMoirai(node[it.name], it.type)
+                    } else {
+                        jsonFail(type)
+                    }
+                }
                 return ApplyTransportAst(type.name, fields)
             }
 
-            jsonFail()
+            jsonFail(type)
         }
 
         is TransportObjectType -> {
@@ -39,7 +45,7 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): TransportAst {
                 return RefTransportAst(type.name)
             }
 
-            jsonFail()
+            jsonFail(type)
         }
 
         is TransportParameterizedBasicType -> {
@@ -66,7 +72,7 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): TransportAst {
                     if (it.isPojo || it.isObject) {
                         val fn = it.fieldNames().asSequence().toList()
                         if (fn.size != 2) {
-                            jsonFail()
+                            jsonFail(type)
                         }
 
                         // TODO: Define your semantics for dictionaries
@@ -83,22 +89,28 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): TransportAst {
                         )
                     }
 
-                    jsonFail()
+                    jsonFail(type)
                 }
 
                 return ApplyTransportAst(type.name, elements)
             }
 
-            jsonFail()
+            jsonFail(type)
         }
 
         is TransportParameterizedRecordType -> {
             if (node.isObject || node.isPojo) {
-                val fields = type.fields.map { jsonToMoirai(node[it.name], it.type) }
+                val fields = type.fields.map {
+                    if(node.has(it.name)) {
+                        jsonToMoirai(node[it.name], it.type)
+                    } else {
+                        jsonFail(type)
+                    }
+                }
                 return ApplyTransportAst(type.name, fields)
             }
 
-            jsonFail()
+            jsonFail(type)
         }
 
         is TransportPlatformObjectType -> {
@@ -106,7 +118,7 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): TransportAst {
                 return RefTransportAst(type.name)
             }
 
-            jsonFail()
+            jsonFail(type)
         }
 
         is TransportPlatformSumType -> {
@@ -118,7 +130,7 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): TransportAst {
                 }
             }
 
-            jsonFail()
+            jsonFail(type)
         }
 
         NonPublicTransportType,
@@ -131,10 +143,10 @@ fun jsonToMoirai(node: JsonNode, type: TransportType): TransportAst {
         is TransportFunctionType,
         is TransportPlatformSumObjectType,
         is TransportPlatformSumRecordType,
-        is TransportStandardTypeParameter -> jsonFail()
+        is TransportStandardTypeParameter -> jsonFail(type)
     }
 }
 
-fun jsonFail(): Nothing {
-    throw MoiraiServiceException("Could not convert JSON to this type")
+fun jsonFail(type: TransportType): Nothing {
+    throw MoiraiServiceException("Could not convert JSON to type ${printConstruct(type)}")
 }

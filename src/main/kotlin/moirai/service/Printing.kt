@@ -2,6 +2,7 @@ package moirai.service
 
 import moirai.eval.*
 import moirai.semantics.core.*
+import moirai.transport.*
 
 fun printConstruct(value: Value): String =
     when(value) {
@@ -34,6 +35,35 @@ fun printConstruct(value: Value): String =
         // Records
         is RecordValue -> "${value.id}(${value.inOrderValues.map { printConstruct(it) }.joinToString()})"
         is SumRecordValue -> "${value.id}(${value.inOrderValues.map { printConstruct(it) }.joinToString()})"
+
+        // Errors
+        else -> throw MoiraiServiceException("Unexpected Value")
+    }
+
+fun printConstruct(type: TransportType): String =
+    when(type) {
+        is TransportBasicType -> type.name
+        TransportConstantFin -> "ConstantFin"
+        is TransportFin -> type.magnitude.toString()
+        is TransportFinTypeParameter -> type.name
+        is TransportMaxCostExpression -> "Max(${type.args.joinToString { printConstruct(it) }})"
+        is TransportProductCostExpression -> "Mul(${type.args.joinToString { printConstruct(it) }})"
+        is TransportSumCostExpression -> "Sum(${type.args.joinToString { printConstruct(it) }})"
+        is TransportFunctionType -> "(${type.formalParamTypes.joinToString { printConstruct(it) }}) -> ${
+            printConstruct(
+                type.returnType
+            )
+        }"
+
+        is TransportGroundRecordType -> type.name
+        is TransportObjectType -> type.name
+        is TransportParameterizedBasicType -> "${type.name}<${type.typeArgs.joinToString { printConstruct(it) }}>"
+        is TransportParameterizedRecordType -> "${type.name}<${type.typeArgs.joinToString { printConstruct(it) }}>"
+        is TransportPlatformObjectType -> type.name
+        is TransportPlatformSumObjectType -> type.name
+        is TransportPlatformSumRecordType -> "${type.name}<${type.typeArgs.joinToString { printConstruct(it) }}>"
+        is TransportPlatformSumType -> "${type.name}<${type.typeArgs.joinToString { printConstruct(it) }}>"
+        is TransportStandardTypeParameter -> type.name
 
         // Errors
         else -> throw MoiraiServiceException("Unexpected Value")
