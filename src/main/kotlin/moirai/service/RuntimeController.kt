@@ -2,7 +2,7 @@ package moirai.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import moirai.composition.*
-import moirai.eval.eval
+import moirai.eval.evalWithCost
 import moirai.semantics.core.ExpectedNamedScript
 import moirai.semantics.core.ExpectedTransientScript
 import moirai.semantics.core.LanguageException
@@ -29,7 +29,8 @@ class RuntimeController {
             when (val scriptType = executionArtifacts.importScan.scriptType) {
                 is PureTransient,
                 is TransientScript -> {
-                    return printConstruct(eval(RuntimeArchitecture, executionArtifacts, RuntimePlugins.userPlugins))
+                    val res = evalWithCost(RuntimeArchitecture, executionArtifacts, RuntimePlugins.userPlugins)
+                    return printConstruct(res.value)
                 }
 
                 is NamedScript -> {
@@ -96,15 +97,14 @@ class RuntimeController {
                         if (tree.isObject || tree.isPojo) {
                             val recordAst = jsonToMoirai(tree, argumentType)
                             val invokeAst = ApplyTransportAst(fetchFunctionResult.name, listOf(recordAst))
-                            return printConstruct(
-                                eval(
-                                    scriptName,
-                                    invokeAst,
-                                    frontend,
-                                    executionCache,
-                                    RuntimePlugins.userPlugins
-                                )
+                            val res = evalWithCost(
+                                scriptName,
+                                invokeAst,
+                                frontend,
+                                executionCache,
+                                RuntimePlugins.userPlugins
                             )
+                            return printConstruct(res.value)
                         } else {
                             throw MoiraiServiceException("JSON body must be a JSON object")
                         }
