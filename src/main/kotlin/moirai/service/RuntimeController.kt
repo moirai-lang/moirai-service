@@ -76,45 +76,49 @@ class RuntimeController {
         ) functionName: String,
         @RequestBody body: String
     ): String {
-        val scriptNameParts = scriptName.split(".")
-        when (val fetchArtifactsResult = executionCache.fetchExecutionArtifacts(scriptNameParts)) {
-            is InCache -> {
-                when (val fetchFunctionResult =
-                    fetchTransportFunction(fetchArtifactsResult.executionArtifacts, functionName)) {
-                    is TransportFunction -> {
-                        if (fetchFunctionResult.formalParams.size != 1) {
-                            throw MoiraiServiceException("Function $functionName must have exactly one formal parameter")
+        try {
+            val scriptNameParts = scriptName.split(".")
+            when (val fetchArtifactsResult = executionCache.fetchExecutionArtifacts(scriptNameParts)) {
+                is InCache -> {
+                    when (val fetchFunctionResult =
+                        fetchTransportFunction(fetchArtifactsResult.executionArtifacts, functionName)) {
+                        is TransportFunction -> {
+                            if (fetchFunctionResult.formalParams.size != 1) {
+                                throw MoiraiServiceException("Function $functionName must have exactly one formal parameter")
+                            }
+
+                            val argumentType = fetchFunctionResult.formalParams.first().type
+                            if (argumentType !is TransportGroundRecordType) {
+                                throw MoiraiServiceException("The single argument to $functionName must be a ground record type")
+                            }
+
+                            val mapper = ObjectMapper()
+                            val tree = mapper.readTree(body)
+
+                            if (tree.isObject || tree.isPojo) {
+                                val recordAst = jsonToMoirai(tree, argumentType)
+                                val invokeAst = ApplyTransportAst(fetchFunctionResult.name, listOf(recordAst))
+                                val res = evalWithCost(
+                                    scriptName,
+                                    invokeAst,
+                                    frontend,
+                                    executionCache,
+                                    RuntimePlugins.userPlugins
+                                )
+                                return printConstruct(res.value)
+                            } else {
+                                throw MoiraiServiceException("JSON body must be a JSON object")
+                            }
                         }
 
-                        val argumentType = fetchFunctionResult.formalParams.first().type
-                        if (argumentType !is TransportGroundRecordType) {
-                            throw MoiraiServiceException("The single argument to $functionName must be a ground record type")
-                        }
-
-                        val mapper = ObjectMapper()
-                        val tree = mapper.readTree(body)
-
-                        if (tree.isObject || tree.isPojo) {
-                            val recordAst = jsonToMoirai(tree, argumentType)
-                            val invokeAst = ApplyTransportAst(fetchFunctionResult.name, listOf(recordAst))
-                            val res = evalWithCost(
-                                scriptName,
-                                invokeAst,
-                                frontend,
-                                executionCache,
-                                RuntimePlugins.userPlugins
-                            )
-                            return printConstruct(res.value)
-                        } else {
-                            throw MoiraiServiceException("JSON body must be a JSON object")
-                        }
+                        TransportFunctionNotFound -> throw MoiraiServiceException("Identifier $functionName not found")
                     }
-
-                    TransportFunctionNotFound -> throw MoiraiServiceException("Identifier $functionName not found")
                 }
-            }
 
-            NotInCache -> throw MoiraiServiceException("Script named $scriptName as not found in the execution cache")
+                NotInCache -> throw MoiraiServiceException("Script named $scriptName as not found in the execution cache")
+            }
+        } catch (ex: LanguageException) {
+            throw MoiraiServiceException(localize(ex.errors.toList()))
         }
     }
 }

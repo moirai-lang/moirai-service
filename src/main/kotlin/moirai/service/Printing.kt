@@ -80,7 +80,7 @@ fun localize(errors: List<LanguageError>): String {
         }
     }
 
-    return sb.toString()
+    return sb.toString().trim()
 }
 
 // TODO: Actually localize these error messages, possibly
