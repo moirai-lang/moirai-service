@@ -162,4 +162,8 @@ fun localize(error: ErrorKind): String =
         is TypeRequiresExplicitFin -> "Symbol ${error.identifier.value} requires explicit Fin"
         TypeSystemBug -> "Type system or interpreter bug"
         is UnknownCaseDetected -> "Unknown case ${error.name}"
+        InvalidMaxCostExpressionArgs -> "Invalid arguments to the Max cost expression"
+        InvalidMulCostExpressionArgs -> "Invalid arguments to the Mul cost expression"
+        InvalidNamedCostExpressionArgs -> "The Named cost expression requires a single string argument"
+        InvalidSumCostExpressionArgs -> "Invalid arguments to the Sum cost expression"
     }
